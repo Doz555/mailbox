@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+
 	"github.com/gorilla/mux"
 	"github.com/utahta/go-linenotify"
 )
@@ -29,7 +29,7 @@ var con [4]net.Conn
 var constatus = false
 var connum = 2
 var token = "Q9DFsGbBMhlTB2zWRWGecCQR9MTfxE3QYBngpMasMki"
-var consql = "root:binaryshop@tcp(mariadb:3306)/mailbox"
+
 
 func tcpSrv() {
 	listener, err := net.Listen("tcp", "0.0.0.0:8080")
@@ -87,18 +87,7 @@ func notification2(MSG string) {
 func node(IP int, MSG string) {
 	con[IP].Write([]byte(MSG + "\r\n"))
 }
-func getBoxST(w http.ResponseWriter, r *http.Request) {
-	var AppPi2 map[string]interface{}
-	GetObjJsonFromRequest(w, r, &AppPi2)
-	selectvalue(`SELECT concat( '{"',id_mailbox,'":[',GROUP_CONCAT('"',date,'"'),']}') FROM boxST WHERE id_mailbox =` + AppPi2["IP"].(string))
-	fmt.Fprintln(w, `ok`)
-}
-func getMailST(w http.ResponseWriter, r *http.Request) {
-	var AppPi2 map[string]interface{}
-	GetObjJsonFromRequest(w, r, &AppPi2)
-	selectvalue(`SELECT concat( '{"',id_mailbox,'":{',GROUP_CONCAT('"',id_stetus,'":{"date":"',date,'","stetus":"',stetus,'"}'),'},"num":"',COUNT(id_stetus),'"}') FROM mailST WHERE id_mailbox =` + AppPi2["IP"].(string))
-	fmt.Fprintln(w, `ok`)
-}
+
 func main() {
 	go tcpSrv()
 	print(".......< Loading >.......")
@@ -159,42 +148,6 @@ func handleConnection(conn net.Conn) {
 	conn.Write([]byte("Connect Success" + "\r\n"))
 	//handleConnection(conn)
 }
-func selectvalue(qr string) string {
-
-	db, err := sql.Open("mysql", consql)
-	if err != nil {
-		panic(err.Error()) // Just for example purpose. You should use proper error handling instead of panic
-	}
-	defer db.Close()
-	rows, err := db.Query(qr)
-	if err != nil {
-		panic(err.Error())
-	}
-	defer rows.Close()
-	value := ""
-	rows.Next()
-	rows.Scan(&value)
-	return value
-
-}
 func GetObjJsonFromRequest(w http.ResponseWriter, r *http.Request, result *map[string]interface{}) {
 	json.NewDecoder(r.Body).Decode(&result)
-}
-func LoginJson(w http.ResponseWriter, r *http.Request) {
-	var person map[string]interface{}
-	GetObjJsonFromRequest(w, r, &person)
-	uname := ""
-	uid := ""
-	ugid := ""
-	println(person["FUser"].(string), " : ", person["FPass"].(string), " : ")
-	if person["FUser"].(string) != "" && person["FPass"].(string) != "" {
-		uname = selectvalue(`SELECT ifnull((select uname from user Where uname = "` + person["FUser"].(string) + `" and upass = PASSWORD("` + person["FPass"].(string) + `")),("User or Pass is Worng")) as anser`)
-		uid = selectvalue(`SELECT ifnull((select uid from user Where uname = "` + person["FUser"].(string) + `" and upass = PASSWORD("` + person["FPass"].(string) + `")),("User or Pass is Worng")) as anser`)
-		ugid = selectvalue(`SELECT ifnull((select ugid from user Where uname = "` + person["FUser"].(string) + `" and upass = PASSWORD("` + person["FPass"].(string) + `") and ugid = ugid),("User or Pass is Worng")) as anser`)
-	} else {
-		fmt.Fprintln(w, `{"Name" : "fail"}`)
-	}
-	if uname != "" {
-		fmt.Fprintln(w, `{"Name":"`+uname+`","uid":"`+uid+`","ugid":"`+ugid+`"}`)
-	}
 }
