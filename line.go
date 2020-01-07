@@ -97,9 +97,6 @@ func main() {
 	}()
 	r := mux.NewRouter()
 	r.HandleFunc("/OpenDoor.php", OpenDoor)
-	r.HandleFunc("/getBoxST.php", getBoxST)
-	r.HandleFunc("/getMailST.php", getMailST)
-	r.HandleFunc("/login.php", LoginJson)
 	r.HandleFunc("/notification", notification)
 	fmt.Printf("start server")
 	println("")
@@ -135,15 +132,12 @@ func handleConnection(conn net.Conn) {
 		node(mailBox.ID2, mailBox.Data)
 		if "openDoor" == mailBox.Data {
 			s := strconv.Itoa(mailBox.ID)
-			selectvalue(`INSERT INTO boxST (id_stetus, id_mailbox, date) VALUES (NULL, '` + s + `', current_timestamp());`)
-			selectvalue(`UPDATE mailST SET stetus = 1 WHERE id_mailbox = ` + s)
-		}
+			}
 	} else if mailBox.Mode == "NewMSG" {
 		notification2("You have new Mail")
 		node(mailBox.ID2, mailBox.Data)
 		s := strconv.Itoa(mailBox.ID2)
-		selectvalue(`INSERT INTO mailST (id_stetus, id_mailbox, stetus, date) VALUES (NULL, '` + s + `', '0', current_timestamp());`)
-	}
+		}
 	log.Println(response)
 	conn.Write([]byte("Connect Success" + "\r\n"))
 	//handleConnection(conn)
